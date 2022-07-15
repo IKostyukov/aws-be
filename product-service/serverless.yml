@@ -1,0 +1,38 @@
+service: product-service
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  httpApi:
+    cors: true
+
+custom:
+  webpack: # serverless-webpack plugin options
+    webpackConfig: webpack.config.js # Name of webpack configuration file
+    includeModules: true # Node modules configuration for packaging
+    packager: 'yarn' # Packager that will be used to package your external modules
+
+package:
+  individually: true
+
+functions:
+  getProductsList:
+    handler: src/handler.getProductsList
+    events:
+      - httpApi:
+          method: GET
+          path: /products
+  getProductsById:
+    handler:  src/handler.getProductsById
+    events:
+      - httpApi:
+          method: GET
+          path: /products/{id}
+
+
