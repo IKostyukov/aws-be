@@ -5,4 +5,5 @@ export interface IProduct {
     price: number
     count: number
     thumbnail?: string
+    category: string
 }
