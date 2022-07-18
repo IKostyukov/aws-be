@@ -13,5 +13,8 @@
 - Webpack is configured for Product Service
 - Main error scenarios are handled by API ("Product not found" error)
 
-### FE part need for updates (in nearest future)
+### FE part 
+
+Link to repo: [https://github.com/VitaliiKopylov/nodejs-aws-fe/](https://github.com/VitaliiKopylov/nodejs-aws-fe/pull/2)
+Link to site: [Toys shop](https://d1ousl87mpr9p8.cloudfront.net/)
 
