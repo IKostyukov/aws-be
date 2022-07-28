@@ -13,6 +13,22 @@ provider:
   region: eu-west-1
   httpApi:
     cors: true
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-
+  #   subnetIds:
+  #     - subnet-
+  #     - subnet-
+  #     - subnet-
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterfaceß
+          Resource: '*'
 
 custom:
   webpack: # serverless-webpack plugin options
@@ -20,9 +36,6 @@ custom:
     includeModules:
       forceInclude:
         - pg
-        - pg-types
-    packager: 'yarn' # Packager that will be used to package your external modules
-
 
 package:
   individually: true
@@ -40,5 +53,11 @@ functions:
       - httpApi:
           method: GET
           path: /products/{id}
+  createProduct:
+    handler:  src/handler.createProduct
+    events:
+      - httpApi:
+          method: POST
+          path: /products
 
 
