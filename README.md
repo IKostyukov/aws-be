@@ -15,5 +15,5 @@
 - [x] Transaction based creation of product
 
 ### TODO
-- [] SWAGGER
-- [] Unit tests
+- [ ] SWAGGER
+- [ ] Unit tests
