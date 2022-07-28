@@ -2,11 +2,8 @@ import { getProductsByIdHandler } from "./handlers/getProductsById";
 import { getProductsListHandler } from "./handlers/getProductsList";
 import { createProductsHandler } from "./handlers/createProduct";
 
-import { inMemoryDb } from "./db/product.inmemory.repository";
 import AwsRdsRepository from "./db/product.aws-rds.repository";
 import { client } from "./db/db.connection";
-
-const { PG_PASSWORD } = process.env;
 
 const awsRdsDb = new AwsRdsRepository(client);
 client
