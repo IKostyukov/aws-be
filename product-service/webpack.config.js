@@ -1,5 +1,6 @@
 const path = require("path");
 const slsw = require("serverless-webpack");
+const webpack = require("webpack");
 // const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
@@ -7,13 +8,16 @@ module.exports = {
   entry: slsw.lib.entries,
   stats: "summary",
   resolve: {
-    extensions: [".ts"],
+    extensions: ['.mjs', '.json', '.ts', '.js'],
   },
   output: {
     libraryTarget: "commonjs",
     path: path.join(__dirname, ".webpack"),
     filename: "[name].js",
   },
+  plugins: [
+    new webpack.IgnorePlugin({ resourceRegExp:/^pg-native$/ })
+  ],
   target: "node",
   module: {
     rules: [

@@ -11,7 +11,13 @@ export default class InMemoryRepository implements IProductRepository {
     return Promise.resolve(this.list);
   }
   getProductsById(id: string) {
-    return Promise.resolve(this.list.find((product: IProduct) => product.id === id));
+    return Promise.resolve(
+      this.list.find((product: IProduct) => product.id === id)
+    );
+  }
+  createProduct(product) {
+    this.list.push(product);
+    return Promise.resolve(product);
   }
 }
 

@@ -5,6 +5,7 @@ frameworkVersion: '3'
 plugins:
   - serverless-webpack
   - serverless-offline
+  - serverless-dotenv-plugin
 
 provider:
   name: aws
@@ -12,12 +13,29 @@ provider:
   region: eu-west-1
   httpApi:
     cors: true
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-
+  #   subnetIds:
+  #     - subnet-
+  #     - subnet-
+  #     - subnet-
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterfaceß
+          Resource: '*'
 
 custom:
   webpack: # serverless-webpack plugin options
     webpackConfig: webpack.config.js # Name of webpack configuration file
-    includeModules: true # Node modules configuration for packaging
-    packager: 'yarn' # Packager that will be used to package your external modules
+    includeModules:
+      forceInclude:
+        - pg
 
 package:
   individually: true
@@ -35,5 +53,11 @@ functions:
       - httpApi:
           method: GET
           path: /products/{id}
+  createProduct:
+    handler:  src/handler.createProduct
+    events:
+      - httpApi:
+          method: POST
+          path: /products
 
 
