@@ -1,0 +1,31 @@
+{
+  "name": "import-service",
+  "version": "1.0.0",
+  "description": "Service for importing .csv files",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "package-build": "sls package",
+    "deploy": "sls deploy",
+    "offline": "sls offline"
+  },
+  "keywords": [
+    "aws",
+    "s3",
+    "rds",
+    "lambda",
+    "cloudfront"
+  ],
+  "author": "Vitalii Kopylov",
+  "license": "ISC",
+  "devDependencies": {
+    "@serverless/utils": "^6.7.0",
+    "serverless-dotenv-plugin": "^4.0.1",
+    "serverless-offline": "^9.0.0",
+    "serverless-webpack": "^5.7.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1184.0",
+    "csv-parser": "^3.0.0"
+  }
+}

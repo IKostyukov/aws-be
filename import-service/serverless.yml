@@ -1,0 +1,64 @@
+service: import-service
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  httpApi:
+    cors: true
+  # iamRoleStatements:
+  #   # Allow functions to list bucket
+  #   - Effect: "Allow"
+  #     Action:
+  #       - "s3:ListBucket"
+  #     Resource:
+  #       Fn::Join:
+  #         - ""
+  #         - - "arn:aws:s3:::"
+  #           - ${env:BUCKET_NAME}
+  #   # Allow functions to read/write objects in a bucket
+  #   - Effect: Allow
+  #     Action:
+  #       - 's3:GetObject'
+  #       - 's3:PutObject'
+  #     Resource:
+  #       Fn::Join:
+  #         - ""
+  #         - - "arn:aws:s3:::"
+  #           - ${env:BUCKET_NAME}
+  #           - "/*"
+
+custom:
+  webpack: 
+    webpackConfig: webpack.config.js # Name of webpack configuration file
+    includeModules: true
+
+package:
+  individually: true
+
+functions:
+  importFileParser:
+    handler: src/handler.importFileParser
+    events:
+      - httpApi:
+          method: GET
+          path: /import
+          request:
+            parameters:
+              querystrings:
+                filename: true
+  # importProductsFile:
+  #   handler:  src/handler.importProductsFile
+  #   events:
+  #     - s3:
+  #       bucket: ${env:BUCKET_NAME}
+  #       event: s3:ObjectCreated:*
+  #       rules:
+  #         - prefix: uploads/
