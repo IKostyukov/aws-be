@@ -15,25 +15,22 @@ export const importProductsFileHandler =
         );
       }
 
-      if (!querystring.name.endsWith('.csv')) {
-        return errorResponse(
-          new Error("Please provide csv file"),
-          400
-        );
+      if (!querystring.name.endsWith(".csv")) {
+        return errorResponse(new Error("Please provide csv file"), 400);
       }
 
       const bucketName = process.env.BUCKET_NAME;
       const key = `uploaded/${querystring.name}`;
-      const signedUrlExpireSeconds = 60 * 5;
+      const signedUrlExpireSeconds = 60;
 
       const url = await s3Service.getSignedUrlPromise("putObject", {
         Bucket: bucketName,
         Key: key,
         Expires: signedUrlExpireSeconds,
-        ContentType: 'text/csv',
+        ContentType: "text/csv",
       });
 
-      return successResponse(url);
+      return successResponse(url, 202);
     } catch (err) {
       return errorResponse(new Error(err));
     }

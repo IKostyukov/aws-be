@@ -17,29 +17,30 @@ provider:
         - https://d1ousl87mpr9p8.cloudfront.net
       allowedMethods:
         - GET
-  iamRoleStatements:
-    # Allow functions to list bucket
-    - Effect: "Allow"
-      Action:
-        - "s3:ListBucket"
-      Resource:
-        Fn::Join:
-          - ""
-          - - "arn:aws:s3:::"
-            - BUCKET_NAME
-    # Allow functions to read/write objects in a bucket
-    - Effect: Allow
-      Action:
-        # - 's3:GetObject'
-        # - 's3:PutObject'
-        # - 's3:DeleteObject'
-        - 's3:*'
-      Resource:
-        Fn::Join:
-          - ""
-          - - "arn:aws:s3:::"
-            - BUCKET_NAME
-            - "/*"
+  iam:
+    role:
+      statements:
+        # Allow functions to list bucket
+        - Effect: "Allow"
+          Action:
+            - "s3:ListBucket"
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - BUCKET_NAME
+        # Allow functions to read/write objects in a bucket
+        - Effect: Allow
+          Action:
+            - 's3:GetObject'
+            - 's3:PutObject'
+            - 's3:DeleteObject'
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - BUCKET_NAME
+                - "/*"
 
 custom:
   webpack: 
@@ -60,6 +61,7 @@ functions:
     handler: src/handler.importFileParser
     events:
       - s3:
+          # bucket: BUCKET_NAME
           bucket: toys-shop-import-service-bucket
           event: s3:ObjectCreated:*
           rules:

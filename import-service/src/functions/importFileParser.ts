@@ -1,13 +1,12 @@
 import logger from "../utils/logger";
 import { errorResponse, successResponse } from "../utils/responseHandler";
 import csv from "csv-parser";
-// const csv = require("csvtojson");
 
 export const importFileParserHandler =
   (s3Service) => async (event, _context) => {
+
     for (const record of event.Records) {
-      const bucketName = record.s3.bucket.name;
-      // const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
+      const bucketName = record.s3.bucket.name
       const key = record.s3.object.key;
 
       const params = {
@@ -39,9 +38,8 @@ export const importFileParserHandler =
           })
           .promise();
 
-        console.log(params);
-
         await s3Service.deleteObject(params).promise();
+        
         console.log(`Object ${key} from bucket ${bucketName} parced and relocated.`);
       } catch (err) {
         console.log(err);
