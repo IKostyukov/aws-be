@@ -1,0 +1,69 @@
+service: import-service
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  httpApi:
+    cors:
+      allowedOrigins:
+        - https://d1ousl87mpr9p8.cloudfront.net
+      allowedMethods:
+        - GET
+  iam:
+    role:
+      statements:
+        # Allow functions to list bucket
+        - Effect: "Allow"
+          Action:
+            - "s3:ListBucket"
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - BUCKET_NAME
+        # Allow functions to read/write objects in a bucket
+        - Effect: Allow
+          Action:
+            - 's3:GetObject'
+            - 's3:PutObject'
+            - 's3:DeleteObject'
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - BUCKET_NAME
+                - "/*"
+
+custom:
+  webpack: 
+    webpackConfig: webpack.config.js # Name of webpack configuration file
+    includeModules: true
+
+package:
+  individually: true
+
+functions:
+  importProductsFile:
+    handler:  src/handler.importProductsFile
+    events:
+      - httpApi:
+          method: GET
+          path: /import
+  importFileParser:
+    handler: src/handler.importFileParser
+    events:
+      - s3:
+          # bucket: BUCKET_NAME
+          bucket: toys-shop-import-service-bucket
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploaded/
+          existing: true
