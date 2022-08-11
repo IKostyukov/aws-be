@@ -1,6 +1,7 @@
 import { getProductsByIdHandler } from "./handlers/getProductsById";
 import { getProductsListHandler } from "./handlers/getProductsList";
 import { createProductsHandler } from "./handlers/createProduct";
+import { catalogBatchProcessHandler } from "./handlers/catalogBatchProcess";
 
 import AwsRdsRepository from "./db/product.aws-rds.repository";
 import { client } from "./db/db.connection";
@@ -14,3 +15,4 @@ client
 export const getProductsById = getProductsByIdHandler(awsRdsDb);
 export const getProductsList = getProductsListHandler(awsRdsDb);
 export const createProduct = createProductsHandler(awsRdsDb);
+export const catalogBatchProcess = catalogBatchProcessHandler(awsRdsDb);

@@ -17,6 +17,9 @@ provider:
         - https://d1ousl87mpr9p8.cloudfront.net
       allowedMethods:
         - GET
+  environment: 
+    SQS_URL: ${cf:product-service-dev.sqsUrl}
+    SQS_ARN: ${cf:product-service-dev.sqsArn}
   iam:
     role:
       statements:
@@ -41,6 +44,11 @@ provider:
               - - "arn:aws:s3:::"
                 - BUCKET_NAME
                 - "/*"
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            - SQS_ARN
 
 custom:
   webpack: 
