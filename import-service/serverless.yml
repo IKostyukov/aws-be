@@ -47,8 +47,7 @@ provider:
         - Effect: Allow
           Action:
             - sqs:*
-          Resource:
-            - SQS_ARN
+          Resource: ${cf:product-service-dev.sqsArn}
 
 custom:
   webpack: 

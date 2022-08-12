@@ -15,22 +15,30 @@ export const importFileParserHandler =
 
       try {
         console.log(`Getting object ${key} from bucket ${bucketName}.`);
-        const s3Stream = s3Service.getObject(params).createReadStream();
 
-        const results: any[] = [];
-
-        await new Promise((resolve, reject) =>
-          s3Stream
+        await new Promise((resolve, reject) => {
+          const results: any[] = [];
+          s3Service
+            .getObject(params)
+            .createReadStream()
             .pipe(csv())
             .on("error", (err) => {
               reject(err);
             })
             .on("data", (data) => {
-              console.log("CSV data::::::", data);
               results.push(data);
             })
-            .on("end", resolve)
-        );
+            .on("end", () => resolve(results));
+        }).then((parcedResults: any[]) => {
+          parcedResults.forEach(async (result) => {
+            await sqsService
+              .sendMessage({
+                MessageBody: JSON.stringify(result),
+                QueueUrl: process.env.SQS_URL,
+              })
+              .promise();
+          });
+        });
 
         await s3Service
           .copyObject({
@@ -41,22 +49,6 @@ export const importFileParserHandler =
           .promise();
 
         await s3Service.deleteObject(params).promise();
-
-        results.forEach((result) => {
-          sqsService.sendMessage(
-            {
-              MessageBody: JSON.stringify(result),
-              QueueUrl: process.env.SQS_URL,
-            },
-            function (err, data) {
-              if (err) {
-                console.log("Error", err);
-              } else {
-                console.log("Success SQS", data.MessageId);
-              }
-            }
-          );
-        });
 
         console.log(
           `Object ${key} from bucket ${bucketName} parced and relocated.`
