@@ -6,6 +6,11 @@ import { catalogBatchProcessHandler } from "./handlers/catalogBatchProcess";
 import AwsRdsRepository from "./db/product.aws-rds.repository";
 import { client } from "./db/db.connection";
 
+import AWS from "aws-sdk";
+const REGION = "eu-west-1";
+
+const snsService = new AWS.SNS({ region: REGION });
+
 const awsRdsDb = new AwsRdsRepository(client);
 client
   .connect()
@@ -15,4 +20,7 @@ client
 export const getProductsById = getProductsByIdHandler(awsRdsDb);
 export const getProductsList = getProductsListHandler(awsRdsDb);
 export const createProduct = createProductsHandler(awsRdsDb);
-export const catalogBatchProcess = catalogBatchProcessHandler(awsRdsDb);
+export const catalogBatchProcess = catalogBatchProcessHandler(
+  awsRdsDb,
+  snsService
+);

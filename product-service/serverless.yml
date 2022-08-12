@@ -5,7 +5,10 @@ frameworkVersion: '3'
 plugins:
   - serverless-webpack
   - serverless-offline
-  - serverless-dotenv-plugin
+  # - serverless-dotenv-plugin
+  - serverless-iam-roles-per-function
+
+useDotenv: true
 
 provider:
   name: aws
@@ -14,22 +17,22 @@ provider:
   httpApi:
     cors: true
   environment:
-    SQS_URL: 
-      Ref: CreateProductsSQSQue
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DescribeNetworkInterfaces
-            - ec2:DeleteNetworkInterfaceß
-          Resource: '*'
-        - Effect: Allow
-          Action:
-            - sqs:*
-          Resource:
-            Fn::GetAtt: [CreateProductsSQSQue, Arn ]
+    SNS_ARN: !Ref CreatedProductsSnsTopic
+      # Ref: CreateProductsSqsQue
+    PG_HOST: ${env:PG_HOST}
+    PG_PORT: ${env:PG_PORT}
+    PG_DATABASE: ${env:PG_DATABASE}
+    PG_USERNAME: ${env:PG_USERNAME}
+    PG_PASSWORD: ${env:PG_PASSWORD}
+    EMAIL_1: ${env:EMAIL_1}
+    EMAIL_2: ${env:EMAIL_2}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterfaceß
+      Resource: '*'
 
 custom:
   webpack: # serverless-webpack plugin options
@@ -43,17 +46,47 @@ package:
 
 resources: 
   Resources:
-    CreateProductsSQSQue:
+    CreateProductsSqsQue:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: create-batch-of-toys-queue
+        QueueName: create-batch-of-toys-queue-new
+        VisibilityTimeout: 5
+    CreatedProductsSnsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: created-product-notification
+    SNSSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+          Endpoint: ${env:EMAIL_1}
+          Protocol: email
+          TopicArn:
+            # Ref returns topic ARN: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-topic.html
+            Ref: CreatedProductsSnsTopic
+            # Template error: resource CreatedProductsSnsTopic does not support attribute type Arn in Fn::GetAtt
+            # !GetAtt CreatedProductsSnsTopic.Arn
+          FilterPolicy:
+            isElectric:
+              - 'is-electric'
+    SNSSubscription2:
+      Type: AWS::SNS::Subscription
+      Properties:
+          Endpoint: ${env:EMAIL_2}
+          Protocol: email
+          TopicArn:
+            Ref: CreatedProductsSnsTopic
+          # FilterPolicy:
+          #   isElectric:
+          #     - 'is-electric'
+
   Outputs:
     sqsUrl:
-      Value: ${self:provider.environment.SQS_URL}
+      # Ref returns Que URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sqs-queue.html
+      Value: { "Ref": "CreateProductsSqsQue" }
       Export:
         Name: sqsUrl
     sqsArn:
-      Value: !GetAtt CreateProductsSQSQue.Arn
+      Value: !GetAtt CreateProductsSqsQue.Arn
       Export:
         Name: sqsArn
 
@@ -82,8 +115,31 @@ functions:
       - sqs:
           batchSize: 5
           arn:
-            Fn::GetAtt:
-              - CreateProductsSQSQue
-              - Arn
+            !GetAtt CreateProductsSqsQue.Arn
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:*
+        Resource:
+          !GetAtt CreateProductsSqsQue.Arn
+          # Alternative form:
+          # Fn::GetAtt: [CreateProductsSqsQue, Arn ]
+          # Alternative form:
+          # Fn::GetAtt:
+          #   - CreateProductsSqsQue
+          #   - Arn
+      - Effect: "Allow"
+        Action:
+          - sns:Publish
+        Resource:
+          Ref: CreatedProductsSnsTopic
+          # !GetAtt CreatedProductsSnsTopic.Arn
+          # Alternative form:
+          # Fn::GetAtt:
+          #   - CreatedProductsSnsTopic
+          #   - Arn
+          # Alternative method of getting the value:
+          # Ref: CreatedProductsSnsTopic
+
 
 
