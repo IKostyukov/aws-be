@@ -14,7 +14,14 @@ provider:
   runtime: nodejs14.x
   region: eu-west-1
   httpApi:
-    cors: true
+    cors:
+      allowedOrigins:
+        - https://d1ousl87mpr9p8.cloudfront.net
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - OPTIONS
   environment:
     SNS_ARN: !Ref CreatedProductsSnsTopic
     PG_HOST: ${env:PG_HOST}
