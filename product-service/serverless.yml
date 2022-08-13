@@ -5,7 +5,6 @@ frameworkVersion: '3'
 plugins:
   - serverless-webpack
   - serverless-offline
-  # - serverless-dotenv-plugin
   - serverless-iam-roles-per-function
 
 useDotenv: true
@@ -18,14 +17,11 @@ provider:
     cors: true
   environment:
     SNS_ARN: !Ref CreatedProductsSnsTopic
-      # Ref: CreateProductsSqsQue
     PG_HOST: ${env:PG_HOST}
     PG_PORT: ${env:PG_PORT}
     PG_DATABASE: ${env:PG_DATABASE}
     PG_USERNAME: ${env:PG_USERNAME}
     PG_PASSWORD: ${env:PG_PASSWORD}
-    EMAIL_1: ${env:EMAIL_1}
-    EMAIL_2: ${env:EMAIL_2}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -63,8 +59,6 @@ resources:
           TopicArn:
             # Ref returns topic ARN: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-topic.html
             Ref: CreatedProductsSnsTopic
-            # Template error: resource CreatedProductsSnsTopic does not support attribute type Arn in Fn::GetAtt
-            # !GetAtt CreatedProductsSnsTopic.Arn
           FilterPolicy:
             isElectric:
               - 'is-electric'
@@ -75,10 +69,6 @@ resources:
           Protocol: email
           TopicArn:
             Ref: CreatedProductsSnsTopic
-          # FilterPolicy:
-          #   isElectric:
-          #     - 'is-electric'
-
   Outputs:
     sqsUrl:
       # Ref returns Que URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sqs-queue.html
@@ -122,24 +112,12 @@ functions:
           - sqs:*
         Resource:
           !GetAtt CreateProductsSqsQue.Arn
-          # Alternative form:
-          # Fn::GetAtt: [CreateProductsSqsQue, Arn ]
-          # Alternative form:
-          # Fn::GetAtt:
-          #   - CreateProductsSqsQue
-          #   - Arn
       - Effect: "Allow"
         Action:
           - sns:Publish
         Resource:
           Ref: CreatedProductsSnsTopic
-          # !GetAtt CreatedProductsSnsTopic.Arn
-          # Alternative form:
-          # Fn::GetAtt:
-          #   - CreatedProductsSnsTopic
-          #   - Arn
-          # Alternative method of getting the value:
-          # Ref: CreatedProductsSnsTopic
+
 
 
 

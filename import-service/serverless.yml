@@ -68,7 +68,6 @@ functions:
     handler: src/handler.importFileParser
     events:
       - s3:
-          # bucket: BUCKET_NAME
           bucket: toys-shop-import-service-bucket
           event: s3:ObjectCreated:*
           rules:

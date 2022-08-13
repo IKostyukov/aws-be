@@ -16,6 +16,7 @@ export const catalogBatchProcessHandler =
           thumbnail,
         });
         console.log("Product created::::::", productCreated);
+        
         const isElectricValue = productCreated.title.includes("Electric") ? 'is-electric' : 'is-non-electric'
         await snsService
           .publish({
