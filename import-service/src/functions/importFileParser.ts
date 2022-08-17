@@ -3,10 +3,9 @@ import { errorResponse, successResponse } from "../utils/responseHandler";
 import csv from "csv-parser";
 
 export const importFileParserHandler =
-  (s3Service) => async (event, _context) => {
-
+  (s3Service, sqsService) => async (event, _context) => {
     for (const record of event.Records) {
-      const bucketName = record.s3.bucket.name
+      const bucketName = record.s3.bucket.name;
       const key = record.s3.object.key;
 
       const params = {
@@ -16,19 +15,30 @@ export const importFileParserHandler =
 
       try {
         console.log(`Getting object ${key} from bucket ${bucketName}.`);
-        const s3Stream = s3Service.getObject(params).createReadStream();
 
-        await new Promise((resolve, reject) =>
-          s3Stream
+        await new Promise((resolve, reject) => {
+          const results: any[] = [];
+          s3Service
+            .getObject(params)
+            .createReadStream()
             .pipe(csv())
             .on("error", (err) => {
               reject(err);
             })
             .on("data", (data) => {
-              console.log("CSV data::::::", data);
+              results.push(data);
             })
-            .on("end", resolve)
-        );
+            .on("end", () => resolve(results));
+        }).then((parcedResults: any[]) => {
+          parcedResults.forEach(async (result) => {
+            await sqsService
+              .sendMessage({
+                MessageBody: JSON.stringify(result),
+                QueueUrl: process.env.SQS_URL,
+              })
+              .promise();
+          });
+        });
 
         await s3Service
           .copyObject({
@@ -39,8 +49,10 @@ export const importFileParserHandler =
           .promise();
 
         await s3Service.deleteObject(params).promise();
-        
-        console.log(`Object ${key} from bucket ${bucketName} parced and relocated.`);
+
+        console.log(
+          `Object ${key} from bucket ${bucketName} parced and relocated.`
+        );
       } catch (err) {
         console.log(err);
         const message = `Error getting object ${key} from bucket ${bucketName}.`;

@@ -5,30 +5,37 @@ frameworkVersion: '3'
 plugins:
   - serverless-webpack
   - serverless-offline
-  - serverless-dotenv-plugin
+  - serverless-iam-roles-per-function
+
+useDotenv: true
 
 provider:
   name: aws
   runtime: nodejs14.x
   region: eu-west-1
   httpApi:
-    cors: true
-  # vpc:
-  #   securityGroupIds:
-  #     - sg-
-  #   subnetIds:
-  #     - subnet-
-  #     - subnet-
-  #     - subnet-
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DescribeNetworkInterfaces
-            - ec2:DeleteNetworkInterfaceß
-          Resource: '*'
+    cors:
+      allowedOrigins:
+        - https://d1ousl87mpr9p8.cloudfront.net
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - OPTIONS
+  environment:
+    SNS_ARN: !Ref CreatedProductsSnsTopic
+    PG_HOST: ${env:PG_HOST}
+    PG_PORT: ${env:PG_PORT}
+    PG_DATABASE: ${env:PG_DATABASE}
+    PG_USERNAME: ${env:PG_USERNAME}
+    PG_PASSWORD: ${env:PG_PASSWORD}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterfaceß
+      Resource: '*'
 
 custom:
   webpack: # serverless-webpack plugin options
@@ -39,6 +46,46 @@ custom:
 
 package:
   individually: true
+
+resources: 
+  Resources:
+    CreateProductsSqsQue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: create-batch-of-toys-queue-new
+        VisibilityTimeout: 5
+    CreatedProductsSnsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: created-product-notification
+    SNSSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+          Endpoint: ${env:EMAIL_1}
+          Protocol: email
+          TopicArn:
+            # Ref returns topic ARN: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-topic.html
+            Ref: CreatedProductsSnsTopic
+          FilterPolicy:
+            isElectric:
+              - 'is-electric'
+    SNSSubscription2:
+      Type: AWS::SNS::Subscription
+      Properties:
+          Endpoint: ${env:EMAIL_2}
+          Protocol: email
+          TopicArn:
+            Ref: CreatedProductsSnsTopic
+  Outputs:
+    sqsUrl:
+      # Ref returns Que URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sqs-queue.html
+      Value: { "Ref": "CreateProductsSqsQue" }
+      Export:
+        Name: sqsUrl
+    sqsArn:
+      Value: !GetAtt CreateProductsSqsQue.Arn
+      Export:
+        Name: sqsArn
 
 functions:
   getProductsList:
@@ -59,5 +106,25 @@ functions:
       - httpApi:
           method: POST
           path: /products
+  catalogBatchProcess: 
+    handler: src/handler.catalogBatchProcess
+    events: 
+      - sqs:
+          batchSize: 5
+          arn:
+            !GetAtt CreateProductsSqsQue.Arn
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - sqs:*
+        Resource:
+          !GetAtt CreateProductsSqsQue.Arn
+      - Effect: "Allow"
+        Action:
+          - sns:Publish
+        Resource:
+          Ref: CreatedProductsSnsTopic
+
+
 
 
