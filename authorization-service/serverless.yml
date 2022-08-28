@@ -1,0 +1,20 @@
+service: authorization-service
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-1
+  environment:
+    TEST_PASSWORD: ${env:TEST_PASSWORD}
+    GITHUB_ACCOUNT_LOGIN: ${env:GITHUB_ACCOUNT_LOGIN}
+
+plugins:
+  - serverless-webpack
+
+functions:
+  basicAuthorizer:
+    handler: src/handler.basicAuthorizer
