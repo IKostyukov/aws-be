@@ -17,6 +17,15 @@ provider:
         - https://d1ousl87mpr9p8.cloudfront.net
       allowedMethods:
         - GET
+    authorizers:
+      basicAuthorizer:
+        name: basicAuthorizer
+        functionArn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:authorization-service-dev-basicAuthorizer
+        type: request
+        enableSimpleResponses: true
+        payloadVersion: '2.0'
+        identitySource:
+          - $request.header.Authorization
   environment: 
     SQS_URL: ${cf:product-service-dev.sqsUrl}
     SQS_ARN: ${cf:product-service-dev.sqsArn}
@@ -64,6 +73,8 @@ functions:
       - httpApi:
           method: GET
           path: /import
+          authorizer:
+            name: basicAuthorizer
   importFileParser:
     handler: src/handler.importFileParser
     events:
